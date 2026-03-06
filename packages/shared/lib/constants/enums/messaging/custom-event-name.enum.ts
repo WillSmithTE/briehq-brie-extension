@@ -1,0 +1,7 @@
+export enum CustomEventName {
+  AUTH_STATUS = 'AUTH_STATUS',
+  METADATA = 'metadata',
+  CLOSE_MODAL = 'CLOSE_MODAL',
+  DISPLAY_MODAL = 'DISPLAY_MODAL',
+  STORE_SCREENSHOT = 'STORE_SCREENSHOT',
+}

@@ -1,14 +1,22 @@
-export type CaptureType = 'area' | 'viewport' | 'full-page';
-export type CaptureState = 'idle' | 'capturing' | 'unsaved';
+import {
+  MessageType,
+  MessageAction,
+  CaptureType as CaptureTypeEnum,
+  CaptureState as CaptureStateEnum,
+  RecordType as RecordTypeEnum,
+} from '@extension/shared';
+
+export type CaptureType = `${CaptureTypeEnum}`;
+export type CaptureState = `${CaptureStateEnum}`;
 
 export type BgMessage =
-  | { type: 'EXIT_CAPTURE' }
-  | { type: 'ADD_RECORD'; data: unknown }
-  | { type: 'GET_RECORDS' }
-  | { type: 'DELETE_RECORDS' }
-  | { type: 'AUTH_START' }
-  | { action: 'checkNativeCapture' }
-  | { action: 'captureVisibleTab' };
+  | { type: MessageType.EXIT_CAPTURE }
+  | { type: MessageType.ADD_RECORD; data: unknown }
+  | { type: MessageType.GET_RECORDS }
+  | { type: MessageType.DELETE_RECORDS }
+  | { type: MessageType.AUTH_START }
+  | { action: MessageAction.CHECK_NATIVE_CAPTURE }
+  | { action: MessageAction.CAPTURE_VISIBLE_TAB };
 
 export type BgResponse =
   | { status: 'success' }
@@ -17,7 +25,7 @@ export type BgResponse =
   | { ok: boolean; error?: string }
   | { isAvailable: boolean };
 
-export type RecordType = 'events' | 'network' | 'console' | 'cookies';
+export type RecordType = `${RecordTypeEnum}`;
 export interface Record {
   recordType: RecordType;
   url: string;

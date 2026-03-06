@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { useStorage } from '@extension/shared';
+import { CaptureState, useStorage } from '@extension/shared';
 import { captureStateStorage } from '@extension/storage';
 
 import { CaptureScreenshotGroup } from './components/capture';
@@ -22,7 +22,7 @@ export const PopupContent = () => {
     <>
       <Header />
       <CaptureScreenshotGroup />
-      {captureState === 'idle' && <SlicesHistoryButton onClick={() => setShowSlicesHistory(true)} />}
+      {captureState === CaptureState.IDLE && <SlicesHistoryButton onClick={() => setShowSlicesHistory(true)} />}
       <BetaNotifier />
     </>
   );

@@ -1,5 +1,6 @@
 import type { Tabs } from 'webextension-polyfill';
 
+import { CaptureState } from '@extension/shared';
 import {
   annotationsRedoStorage,
   annotationsStorage,
@@ -23,7 +24,7 @@ export const handleOnTabRemoved = async (tabId: number) => {
     const captureTabId = await captureTabStorage.getCaptureTabId();
     if (tabId === captureTabId) {
       await Promise.all([
-        captureStateStorage.setCaptureState('idle'),
+        captureStateStorage.setCaptureState(CaptureState.IDLE),
         captureTabStorage.setCaptureTabId(null),
         annotationsStorage.clearAll(),
         annotationsRedoStorage.clearAll(),
@@ -51,13 +52,13 @@ export const handleOnTabUpdated = async (tabId: number, changeInfo: Tabs.OnUpdat
       captureTabStorage.getCaptureTabId(),
     ]);
 
-    if (!capturedTabId && state === 'unsaved') {
-      await captureStateStorage.setCaptureState('idle');
+    if (!capturedTabId && state === CaptureState.UNSAVED) {
+      await captureStateStorage.setCaptureState(CaptureState.IDLE);
     }
 
     if (tabId === capturedTabId) {
       await Promise.all([
-        captureStateStorage.setCaptureState('idle'),
+        captureStateStorage.setCaptureState(CaptureState.IDLE),
         captureTabStorage.setCaptureTabId(null),
         annotationsStorage.clearAll(),
         annotationsRedoStorage.clearAll(),

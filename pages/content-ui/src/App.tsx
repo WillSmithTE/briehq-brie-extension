@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
-import { useStorage } from '@extension/shared';
+import { CaptureState, CustomEventName, useStorage } from '@extension/shared';
 import {
   annotationsHistoryStorage,
   annotationsRedoStorage,
@@ -28,16 +28,16 @@ export default function App() {
   const [idempotencyKey, setIdempotencyKey] = useState<string>(uuid());
 
   useEffect(() => {
-    window.addEventListener('DISPLAY_MODAL', handleOnDisplay);
-    window.addEventListener('CLOSE_MODAL', handleOnClose);
-    window.addEventListener('STORE_SCREENSHOT', handleOnStoreScreenshot);
-    window.addEventListener('AUTH_STATUS', handleOnAuthStatus);
+    window.addEventListener(CustomEventName.DISPLAY_MODAL, handleOnDisplay);
+    window.addEventListener(CustomEventName.CLOSE_MODAL, handleOnClose);
+    window.addEventListener(CustomEventName.STORE_SCREENSHOT, handleOnStoreScreenshot);
+    window.addEventListener(CustomEventName.AUTH_STATUS, handleOnAuthStatus);
 
     return () => {
-      window.removeEventListener('DISPLAY_MODAL', handleOnDisplay);
-      window.removeEventListener('CLOSE_MODAL', handleOnClose);
-      window.removeEventListener('STORE_SCREENSHOT', handleOnStoreScreenshot);
-      window.removeEventListener('AUTH_STATUS', handleOnAuthStatus);
+      window.removeEventListener(CustomEventName.DISPLAY_MODAL, handleOnDisplay);
+      window.removeEventListener(CustomEventName.CLOSE_MODAL, handleOnClose);
+      window.removeEventListener(CustomEventName.STORE_SCREENSHOT, handleOnStoreScreenshot);
+      window.removeEventListener(CustomEventName.AUTH_STATUS, handleOnAuthStatus);
     };
   }, []);
 
@@ -66,7 +66,7 @@ export default function App() {
   const handleOnDisplay = async (event: any) => {
     setScreenshots(event.detail.screenshots);
     setMinimized(false);
-    await captureStateStorage.setCaptureState('unsaved');
+    await captureStateStorage.setCaptureState(CaptureState.UNSAVED);
   };
 
   const handleOnClose = useCallback(async () => {
@@ -75,7 +75,7 @@ export default function App() {
     setMinimized(false);
 
     await Promise.all([
-      captureStateStorage.setCaptureState('idle'),
+      captureStateStorage.setCaptureState(CaptureState.IDLE),
       annotationsStorage.clearAll(),
       annotationsRedoStorage.clearAll(),
       annotationsHistoryStorage.clearAll(),
@@ -109,7 +109,7 @@ export default function App() {
   );
 
   const handleOnMinimize = async () => {
-    await captureStateStorage.setCaptureState('capturing');
+    await captureStateStorage.setCaptureState(CaptureState.CAPTURING);
     setMinimized(true);
   };
   const handleOnEdit = async () => {
@@ -117,10 +117,10 @@ export default function App() {
 
     setMinimized(false);
 
-    await captureStateStorage.setCaptureState('unsaved');
+    await captureStateStorage.setCaptureState(CaptureState.UNSAVED);
   };
 
-  const capturing = captureState === 'capturing';
+  const capturing = captureState === CaptureState.CAPTURING;
 
   return (
     <div id="brie-content" className={cn('light', 'relative')}>

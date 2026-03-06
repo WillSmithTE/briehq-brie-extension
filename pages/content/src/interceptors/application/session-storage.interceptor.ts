@@ -1,4 +1,4 @@
-import { safePostMessage } from '@extension/shared';
+import { MessageType, RecordSource, RecordType, safePostMessage } from '@extension/shared';
 
 // Get all sessionStorage data
 export const interceptSessionStorage = () => {
@@ -16,10 +16,10 @@ export const interceptSessionStorage = () => {
     });
   }
 
-  safePostMessage('ADD_RECORD', {
+  safePostMessage(MessageType.ADD_RECORD, {
     timestamp,
-    recordType: 'session-storage',
-    source: 'client',
+    recordType: RecordType.SESSION_STORAGE,
+    source: RecordSource.CLIENT,
     items: sessionStorageData,
   });
 };

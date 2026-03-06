@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { tabs } from 'webextension-polyfill';
 
-import { deepRedactSensitiveInfo } from '@extension/shared';
+import { deepRedactSensitiveInfo, RecordDomain, RecordType } from '@extension/shared';
 
 import type { Record } from '@src/types';
 
@@ -64,7 +64,7 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
   const uuid = uuidv4();
 
   try {
-    if (record.recordType !== 'network') {
+    if (record.recordType !== RecordType.NETWORK) {
       recordsMap.set(uuid, { uuid, ...deepRedactSensitiveInfo(record, tabUrl) });
       return;
     }
@@ -83,7 +83,7 @@ export const addOrMergeRecords = async (tabId: number, record: Record): Promise<
       urlMap.set(url, requestId);
     }
 
-    if (domain && ['fetch', 'xhr'].includes(domain) && !finalRequestId) {
+    if (domain && [RecordDomain.FETCH, RecordDomain.XHR].includes(domain as RecordDomain) && !finalRequestId) {
       const urlMapValue = urlMap.get(url);
 
       if (urlMapValue) {

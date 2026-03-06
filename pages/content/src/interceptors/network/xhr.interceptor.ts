@@ -1,4 +1,4 @@
-import { safePostMessage } from '@extension/shared';
+import { EventType, MessageType, RecordDomain, RecordSource, RecordType, safePostMessage } from '@extension/shared';
 
 // Define interfaces for request details and payload
 interface RequestDetails {
@@ -91,24 +91,24 @@ export const interceptXHR = (): void => {
               status: this.status,
               responseHeaders,
               responseBody,
-              domain: 'xhr',
+              domain: RecordDomain.XHR,
             };
 
-            safePostMessage('ADD_RECORD', {
+            safePostMessage(MessageType.ADD_RECORD, {
               timestamp,
-              recordType: 'network',
-              source: 'client',
+              recordType: RecordType.NETWORK,
+              source: RecordSource.CLIENT,
               ...payload,
             });
 
             if (this.status >= 400) {
-              safePostMessage('ADD_RECORD', {
-                type: 'log',
-                recordType: 'console',
-                source: 'client',
+              safePostMessage(MessageType.ADD_RECORD, {
+                type: EventType.LOG,
+                recordType: RecordType.CONSOLE,
+                source: RecordSource.CLIENT,
                 method: 'error',
                 timestamp: Date.now(),
-                domain: 'xhr',
+                domain: RecordDomain.XHR,
                 args: [
                   `[XHR] ${this._requestDetails.method} ${this._requestDetails.url} responded with status ${this.status}`,
                   payload,

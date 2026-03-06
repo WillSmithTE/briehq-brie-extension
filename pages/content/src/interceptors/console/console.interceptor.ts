@@ -1,4 +1,4 @@
-import { safePostMessage, safeStructuredClone } from '@extension/shared';
+import { EventType, MessageType, RecordSource, RecordType, safePostMessage, safeStructuredClone } from '@extension/shared';
 
 export const interceptConsole = () => {
   const originalConsole = {
@@ -38,9 +38,9 @@ export const interceptConsole = () => {
       const sanitizedArgs = args.map(sanitizeArg);
 
       const logData: Record<string, any> = {
-        type: 'log',
-        recordType: 'console',
-        source: 'client',
+        type: EventType.LOG,
+        recordType: RecordType.CONSOLE,
+        source: RecordSource.CLIENT,
         method,
         timestamp,
         args: sanitizedArgs,
@@ -55,7 +55,7 @@ export const interceptConsole = () => {
         };
       }
 
-      safePostMessage('ADD_RECORD', logData);
+      safePostMessage(MessageType.ADD_RECORD, logData);
     } catch {
       // Don't throw or break host page
     }

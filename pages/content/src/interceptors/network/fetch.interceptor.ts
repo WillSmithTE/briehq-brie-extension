@@ -1,4 +1,4 @@
-import { safePostMessage } from '@extension/shared';
+import { EventType, MessageType, RecordDomain, RecordSource, RecordType, safePostMessage } from '@extension/shared';
 
 import { extractQueryParams } from '@src/utils';
 
@@ -171,10 +171,10 @@ export const interceptFetch = (): void => {
       const endISO = new Date().toISOString();
       const durationMs = performance.now() - startPerf;
 
-      safePostMessage('ADD_RECORD', {
-        domain: 'fetch',
-        recordType: 'network',
-        source: 'client',
+      safePostMessage(MessageType.ADD_RECORD, {
+        domain: RecordDomain.FETCH,
+        recordType: RecordType.NETWORK,
+        source: RecordSource.CLIENT,
         timestamp: Date.now(),
         method,
         url: urlStr,
@@ -192,13 +192,13 @@ export const interceptFetch = (): void => {
         outcome: 'error',
       });
 
-      safePostMessage('ADD_RECORD', {
-        type: 'log',
-        recordType: 'console',
-        source: 'client',
+      safePostMessage(MessageType.ADD_RECORD, {
+        type: EventType.LOG,
+        recordType: RecordType.CONSOLE,
+        source: RecordSource.CLIENT,
         method: 'error',
         timestamp: Date.now(),
-        domain: 'fetch',
+        domain: RecordDomain.FETCH,
         args: [`[Fetch] ${method} ${urlStr} network error`, String(err)],
         stackTrace: { parsed: 'interceptFetch', raw: '' },
         href: location.href,
@@ -213,10 +213,10 @@ export const interceptFetch = (): void => {
 
     // Opaque / CORS no-cors responses
     if (response.type === 'opaque') {
-      safePostMessage('ADD_RECORD', {
-        domain: 'fetch',
-        recordType: 'network',
-        source: 'client',
+      safePostMessage(MessageType.ADD_RECORD, {
+        domain: RecordDomain.FETCH,
+        recordType: RecordType.NETWORK,
+        source: RecordSource.CLIENT,
         timestamp: Date.now(),
         method,
         url: urlStr,
@@ -283,21 +283,21 @@ export const interceptFetch = (): void => {
     };
 
     try {
-      safePostMessage('ADD_RECORD', {
-        domain: 'fetch',
-        recordType: 'network',
-        source: 'client',
+      safePostMessage(MessageType.ADD_RECORD, {
+        domain: RecordDomain.FETCH,
+        recordType: RecordType.NETWORK,
+        source: RecordSource.CLIENT,
         timestamp: Date.now(),
         ...payload,
       });
 
       if (response.status >= 400) {
-        safePostMessage('ADD_RECORD', {
+        safePostMessage(MessageType.ADD_RECORD, {
           timestamp: Date.now(),
-          domain: 'fetch',
-          type: 'log',
-          recordType: 'console',
-          source: 'client',
+          domain: RecordDomain.FETCH,
+          type: EventType.LOG,
+          recordType: RecordType.CONSOLE,
+          source: RecordSource.CLIENT,
           method: 'error',
           args: [`[Fetch] ${method} ${urlStr} responded with status ${response.status}`, payload],
           stackTrace: { parsed: 'interceptFetch', raw: '' },

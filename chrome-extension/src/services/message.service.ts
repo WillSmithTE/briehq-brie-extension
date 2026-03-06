@@ -1,6 +1,7 @@
 import type { Runtime } from 'webextension-polyfill';
 import { tabs } from 'webextension-polyfill';
 
+import { CaptureState, MessageAction, MessageType } from '@extension/shared';
 import { annotationsRedoStorage, annotationsStorage, captureStateStorage, captureTabStorage } from '@extension/storage';
 
 import type { BgResponse } from '@src/types';
@@ -13,9 +14,9 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
 
   try {
     switch (message.type) {
-      case 'EXIT_CAPTURE': {
+      case MessageType.EXIT_CAPTURE: {
         await Promise.all([
-          captureStateStorage.setCaptureState('idle'),
+          captureStateStorage.setCaptureState(CaptureState.IDLE),
           captureTabStorage.setCaptureTabId(null),
           annotationsStorage.clearAll(),
           annotationsRedoStorage.clearAll(),
@@ -24,39 +25,39 @@ export const handleOnMessage = async (raw: unknown, sender: Runtime.MessageSende
         return { status: 'success' };
       }
 
-      case 'ADD_RECORD': {
+      case MessageType.ADD_RECORD: {
         const tabId = sender.tab?.id;
         if (typeof tabId === 'number') addOrMergeRecords(tabId, message.data);
 
         return { status: 'success' };
       }
 
-      case 'GET_RECORDS': {
+      case MessageType.GET_RECORDS: {
         const tabId = sender.tab?.id;
         const records = tabId ? await getRecords(tabId) : [];
 
         return { records };
       }
 
-      case 'DELETE_RECORDS': {
+      case MessageType.DELETE_RECORDS: {
         const tabId = sender.tab?.id;
         if (typeof tabId === 'number') await deleteRecords(tabId);
 
         return { status: 'success' };
       }
 
-      case 'AUTH_START':
+      case MessageType.AUTH_START:
         return handleOnAuthStart();
     }
 
     if ('action' in message) {
-      if (message.action === 'checkNativeCapture') {
+      if (message.action === MessageAction.CHECK_NATIVE_CAPTURE) {
         const isAvailable = typeof tabs?.captureVisibleTab === 'function';
 
         return { isAvailable };
       }
 
-      if (message.action === 'captureVisibleTab') {
+      if (message.action === MessageAction.CAPTURE_VISIBLE_TAB) {
         try {
           const dataUrl = await tabs.captureVisibleTab(undefined, {
             format: 'jpeg',

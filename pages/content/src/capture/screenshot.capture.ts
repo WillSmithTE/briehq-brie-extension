@@ -3,6 +3,16 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { t } from '@extension/i18n';
 import type { Screenshot } from '@extension/shared';
+import {
+  CaptureType,
+  CustomEventName,
+  EventType,
+  MessageAction,
+  MessageType,
+  RecordDomain,
+  RecordSource,
+  RecordType,
+} from '@extension/shared';
 
 let lastPointerX = 0;
 let lastPointerY = 0;
@@ -258,7 +268,7 @@ const onKeyDown = (e: KeyboardEvent) => {
     cleanup(); // Cleanup on ESC
 
     // Notify Background on ESC
-    chrome.runtime.sendMessage({ type: 'EXIT_CAPTURE' });
+    chrome.runtime.sendMessage({ type: MessageType.EXIT_CAPTURE });
   }
 };
 
@@ -392,7 +402,7 @@ const captureTab = (): Promise<string> =>
   new Promise((resolve, reject) => {
     toggleMinimizedPreview();
 
-    chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, response => {
+    chrome.runtime.sendMessage({ action: MessageAction.CAPTURE_VISIBLE_TAB }, response => {
       if (chrome.runtime.lastError) {
         // Error from Chrome's runtime
         console.log('chrome.runtime.lastError.message', chrome.runtime.lastError.message);
@@ -413,7 +423,7 @@ const captureTab = (): Promise<string> =>
 
 const checkIfNativeCaptureAvailable = () =>
   new Promise(resolve => {
-    chrome.runtime.sendMessage({ action: 'checkNativeCapture' }, response => {
+    chrome.runtime.sendMessage({ action: MessageAction.CHECK_NATIVE_CAPTURE }, response => {
       resolve(response?.isAvailable || false);
     });
   });
@@ -556,20 +566,20 @@ const saveAndNotify = ({ screenshots, mode }: { screenshots: Screenshot[]; mode:
    */
   window.postMessage(
     {
-      type: 'ADD_RECORD',
+      type: MessageType.ADD_RECORD,
       payload: {
-        type: 'event',
+        type: EventType.EVENT,
         event: 'capture',
-        recordType: 'events',
-        domain: 'screenshot',
-        source: 'client',
+        recordType: RecordType.EVENTS,
+        domain: RecordDomain.SCREENSHOT,
+        source: RecordSource.CLIENT,
         timestamp,
       },
     },
     '*',
   );
 
-  const eventName = mode === 'single' ? 'DISPLAY_MODAL' : 'STORE_SCREENSHOT';
+  const eventName = mode === 'single' ? CustomEventName.DISPLAY_MODAL : CustomEventName.STORE_SCREENSHOT;
 
   const event = new CustomEvent(eventName, {
     detail: {
@@ -593,10 +603,10 @@ export const startScreenshotCapture = async ({
    */
   mode = 'multiple',
 }: {
-  type: 'full-page' | 'viewport' | 'area';
+  type: `${CaptureType}`;
   mode: 'single' | 'multiple';
 }) => {
-  if (type === 'full-page') {
+  if (type === CaptureType.FULL_PAGE) {
     const scaleFactor = window.devicePixelRatio || 2;
     const fullCanvas = await html2canvas(document.body, {
       useCORS: true,
@@ -621,7 +631,7 @@ export const startScreenshotCapture = async ({
     return;
   }
 
-  if (type === 'viewport') {
+  if (type === CaptureType.VIEWPORT) {
     const viewport = await captureTab();
 
     saveAndNotify({ screenshots: [{ src: viewport }], mode });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IS_DEV } from '@extension/env';
 import { t } from '@extension/i18n';
-import { AuthMethod, useStorage } from '@extension/shared';
+import { AuthMethod, CaptureState, CaptureType, MessageAction, useStorage } from '@extension/shared';
 import { captureStateStorage, captureTabStorage, pendingReloadTabsStorage } from '@extension/storage';
 import { useUser } from '@extension/store';
 import {
@@ -22,13 +22,13 @@ import { useSlicesCreatedToday } from '@src/hooks';
 const captureTypes = [
   {
     name: t('area'),
-    slug: 'area',
+    slug: CaptureType.AREA,
     icon: 'SquareDashed',
   },
-  { name: t('viewport'), slug: 'viewport', icon: 'AppWindowMac' },
+  { name: t('viewport'), slug: CaptureType.VIEWPORT, icon: 'AppWindowMac' },
   {
     name: t('fullPage'),
-    slug: 'full-page',
+    slug: CaptureType.FULL_PAGE,
     icon: 'RectangleVertical',
   },
 ];
@@ -65,7 +65,10 @@ export const CaptureScreenshotGroup = () => {
     return isGuest && totalSlicesCreatedToday > 10 && Boolean(activeTab.id);
   }, [totalSlicesCreatedToday, user?.fields?.authMethod, activeTab.id]);
 
-  const isCaptureActive = useMemo(() => ['capturing', 'unsaved'].includes(captureState), [captureState]);
+  const isCaptureActive = useMemo(
+    () => [CaptureState.CAPTURING, CaptureState.UNSAVED].includes(captureState as CaptureState),
+    [captureState],
+  );
 
   useEffect(() => {
     const initializeState = async () => {
@@ -81,8 +84,8 @@ export const CaptureScreenshotGroup = () => {
     };
 
     const handleEscapeKey = async event => {
-      if (event.key === 'Escape' && captureState === 'capturing') {
-        await updateCaptureState('idle');
+      if (event.key === 'Escape' && captureState === CaptureState.CAPTURING) {
+        await updateCaptureState(CaptureState.IDLE);
         await updateActiveTab(null);
       }
     };
@@ -102,7 +105,7 @@ export const CaptureScreenshotGroup = () => {
     setActiveTab(prev => ({ ...prev, id: tabId }));
   }, []);
 
-  const handleCaptureScreenshot = async (type?: 'full-page' | 'viewport' | 'area') => {
+  const handleCaptureScreenshot = async (type?: `${CaptureType}`) => {
     // if (mode === 'single') {
     //   if (captureState === 'unsaved' && activeTab?.id) {
     //     handleOnDiscard(activeTab?.id);
@@ -127,13 +130,13 @@ export const CaptureScreenshotGroup = () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
     if (tabs[0]?.id && type) {
-      await updateCaptureState('capturing');
+      await updateCaptureState(CaptureState.CAPTURING);
       await updateActiveTab(tabs[0].id);
 
       chrome.tabs.sendMessage(
         tabs[0].id,
         {
-          action: 'START_SCREENSHOT',
+          action: MessageAction.START_SCREENSHOT,
           payload: { type },
         },
         response => {
@@ -169,10 +172,10 @@ export const CaptureScreenshotGroup = () => {
      * if unsaved state,
      * then display a alert with same two option, discard or save
      */
-    await updateCaptureState('idle');
+    await updateCaptureState(CaptureState.IDLE);
     await updateActiveTab(null);
 
-    chrome.tabs.sendMessage(activeTabId, { action: 'CLOSE_MODAL' }, response => {
+    chrome.tabs.sendMessage(activeTabId, { action: MessageAction.CLOSE_MODAL }, response => {
       if (chrome.runtime.lastError) {
         console.error('Error stopping unsaved:', chrome.runtime.lastError.message);
       } else {
@@ -204,7 +207,7 @@ export const CaptureScreenshotGroup = () => {
     );
   }
 
-  if (isInternalPage && captureState !== 'unsaved' && currentActiveTab !== activeTab.id) {
+  if (isInternalPage && captureState !== CaptureState.UNSAVED && currentActiveTab !== activeTab.id) {
     return (
       <Alert className="text-center">
         <AlertDescription className="text-[12px]">{t('navigateToWebsite')}</AlertDescription>
@@ -212,7 +215,7 @@ export const CaptureScreenshotGroup = () => {
     );
   }
 
-  if (captureState === 'unsaved' && currentActiveTab !== activeTab.id) {
+  if (captureState === CaptureState.UNSAVED && currentActiveTab !== activeTab.id) {
     return (
       <>
         <Alert className="text-center">
@@ -239,7 +242,7 @@ export const CaptureScreenshotGroup = () => {
     );
   }
 
-  if (captureState === 'unsaved' && currentActiveTab === activeTab.id) {
+  if (captureState === CaptureState.UNSAVED && currentActiveTab === activeTab.id) {
     return (
       <div className="border-muted grid w-full gap-4 rounded-xl border bg-slate-100/20 p-2">
         <button
@@ -282,7 +285,7 @@ export const CaptureScreenshotGroup = () => {
                   className={cn(
                     'hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-between rounded-md border border-transparent py-3 hover:cursor-pointer hover:border-slate-200 dark:border-0',
                   )}>
-                  <Icon name={type.icon} className="mb-3 size-5" strokeWidth={type.slug === 'area' ? 2 : 1.5} />
+                  <Icon name={type.icon} className="mb-3 size-5" strokeWidth={type.slug === CaptureType.AREA ? 2 : 1.5} />
 
                   <span className="text-nowrap text-[11px]">{type.name}</span>
                 </Label>
@@ -297,7 +300,7 @@ export const CaptureScreenshotGroup = () => {
         </p>
       )} */}
 
-      {activeTab.id !== currentActiveTab && ['capturing', 'unsaved'].includes(captureState) && (
+      {activeTab.id !== currentActiveTab && [CaptureState.CAPTURING, CaptureState.UNSAVED].includes(captureState as CaptureState) && (
         <Button type="button" variant="link" size="sm" className="w-full" onClick={handleGoToActiveTab}>
           {t('openActiveTab')}
         </Button>

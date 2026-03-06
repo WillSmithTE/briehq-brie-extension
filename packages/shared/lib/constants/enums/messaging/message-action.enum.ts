@@ -1,0 +1,8 @@
+export enum MessageAction {
+  CHECK_NATIVE_CAPTURE = 'checkNativeCapture',
+  CAPTURE_VISIBLE_TAB = 'captureVisibleTab',
+  START_SCREENSHOT = 'START_SCREENSHOT',
+  AUTH_STATUS = 'AUTH_STATUS',
+  EXIT_CAPTURE = 'EXIT_CAPTURE',
+  CLOSE_MODAL = 'CLOSE_MODAL',
+}

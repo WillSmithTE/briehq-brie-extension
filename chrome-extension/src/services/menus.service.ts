@@ -2,9 +2,9 @@ import type { ContextMenus, Menus, Tabs } from 'webextension-polyfill';
 import { contextMenus } from 'webextension-polyfill';
 
 import { t } from '@extension/i18n';
+import { CaptureState, CaptureType, MessageAction } from '@extension/shared';
 import { captureStateStorage, captureTabStorage } from '@extension/storage';
 
-import type { CaptureType } from '@src/types';
 import { sendMessageToTab } from '@src/utils';
 
 export const addContextMenus = async (): Promise<void> => {
@@ -21,10 +21,10 @@ export const addContextMenus = async (): Promise<void> => {
       contexts: ['all'],
     });
 
-    const captureOptions: Array<{ id: CaptureType; title: string }> = [
-      { id: 'area', title: t('area') },
-      { id: 'full-page', title: t('fullPage') },
-      { id: 'viewport', title: t('viewport') },
+    const captureOptions: Array<{ id: `${CaptureType}`; title: string }> = [
+      { id: CaptureType.AREA, title: t('area') },
+      { id: CaptureType.FULL_PAGE, title: t('fullPage') },
+      { id: CaptureType.VIEWPORT, title: t('viewport') },
     ];
 
     await Promise.all(
@@ -47,13 +47,13 @@ export const handleOnContextMenuClicked = async (info: Menus.OnClickData, tab?: 
     const tabId = tab?.id;
     if (!tabId) return;
 
-    const type = info.menuItemId as CaptureType;
-    if (!['area', 'full-page', 'viewport'].includes(type)) return;
+    const type = info.menuItemId as `${CaptureType}`;
+    if (!Object.values(CaptureType).includes(type as CaptureType)) return;
 
-    await captureStateStorage.setCaptureState('capturing');
+    await captureStateStorage.setCaptureState(CaptureState.CAPTURING);
     await captureTabStorage.setCaptureTabId(tabId);
 
-    await sendMessageToTab(tabId, { action: 'START_SCREENSHOT', payload: { type } });
+    await sendMessageToTab(tabId, { action: MessageAction.START_SCREENSHOT, payload: { type } });
   } catch (e) {
     console.error('[background] onContextMenuClicked error:', e);
   }
